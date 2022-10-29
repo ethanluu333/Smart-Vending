@@ -57,7 +57,7 @@ class Controller(tk.Tk):
     self.coupon = None
 
     # Start with a welcome message
-    typerwriter(self, ["Welcome to the\nvending machine"])
+    typerwriter(self, ["Welcome to Team 7\nVending machine"])
 
     for product in productDB.all():
       self.products.append(ProductItem(

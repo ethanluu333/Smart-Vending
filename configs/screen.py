@@ -5,8 +5,8 @@ CONFIRM = 3
 PAY_CASH = 4
 
 # Buttons
-LOTTERY = "LO"
-HELP = "HELP"
+LOTTERY = "LOT"
+HELP = "HLP"
 CLEAR   = "CLR"
 
 BUTTONS = [

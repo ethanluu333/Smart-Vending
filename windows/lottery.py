@@ -56,7 +56,7 @@ def lotteryWindow(parent, c):
   ]
 
   # Lottery winnings
-  lotteries = ["a\nCoupon", "a\nFree Burger", "75\nCoins", "a\nCoupon", "20 Coins"]
+  lotteries = ["a\nCoupon", "a\nFree Snack", "75\nCoins", "a\nCoupon", "20 Coins"]
 
   # Draw lottery frames
   for i in range(len(panes)):
@@ -71,7 +71,7 @@ def lotteryWindow(parent, c):
     if result == 0:
       generateCoupon(25)
     elif result == 1:
-      print("Here is your free burger")
+      print("Here is your free snack")
     elif result == 2:
       newBalance = c.coinBalance.get() + 5
       updateAccountBalance(c, newBalance)
