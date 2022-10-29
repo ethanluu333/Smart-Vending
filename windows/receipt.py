@@ -23,7 +23,7 @@ def receiptWindow(config, parent, c):
   infoFrame.pack()
 
   # Receipt header
-  tk.Label(infoFrame, text="Burger Vending Machine", bg="white", font=constants.SUB_HEADER).pack()
+  tk.Label(infoFrame, text="Team 7 Vending Machine", bg="white", font=constants.SUB_HEADER).pack()
   tk.Label(infoFrame, text="*" * 43, bg="white").pack()
 
   # Table Frames
