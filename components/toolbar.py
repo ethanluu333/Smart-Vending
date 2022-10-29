@@ -50,7 +50,7 @@ class Toolbar:
     # Lottery button
     ToolbarButton(
       self.container,
-      text="Lottery",
+      text="Rewards",
       command=partial(lotteryWindow, parent, c),
       image=c.lotteryImage,
       bg=constants.LOTTERY_BG,
