@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import socket
 import pickle
 from tinydb import TinyDB
@@ -33,26 +32,20 @@ while True:
 
     subtotal = subtotal - (subtotal * (int(coupon[4:]) / 100)) if coupon else subtotal
 
-    # Calculate the new card payment balance and return the changes if payment method is cash.
     newBalance = balance - subtotal
 
-    # Proceed if user user has enough money 
     if subtotal <= balance:
-      # Decrement stock
       for product in cart.values():
         productDB.update({
           "quantity": product["quantity"] - product["amount"]
         }, doc_ids=[product["id"]])
 
-      # Update Balance
       if paymentType == "card":
         accountDB.update({ "balance": round(newBalance, 2) }, doc_ids=[1])
 
-      # Delete coupon
       if coupon:
         couponDB.remove(doc_ids=[couponID])
 
-      # Log trasaction
       transactionID = transationDB.insert({
         "timestamp": str(date.today()),
         "subtotal": round(response["subtotal"], 2),
@@ -100,8 +93,6 @@ while True:
     sizes   = []
     colors  = []
 
-    # arguments required for matlibplot library 
-    # When the stock is low, it is red; when it is moderately low, it is orange; and when the stock is under control, it is green.
     for product in productDB:
       labels.append(product["name"])
       sizes.append(product["quantity"])
