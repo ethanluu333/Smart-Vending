@@ -1,109 +1,141 @@
-import tkinter as tk
+"""
+Username : admin
+Password : admin
+"""
+import datetime
+from time import strftime
+from tkinter import *
+from tkinter import messagebox
+from PIL import Image, ImageTk
+from Admin_menu import Admin
+from User_menu import User
+from Userlogin import Login
 
-import configs.constants as constants
-from tinydb import TinyDB, Query
+TOP_NAV_COLOR = "#ffffff"
+BG = "#ffffff"
+FG = "#000000"
 
-from components.product import ProductList, ProductItem
-from components.balance import Balance
-from components.keypad import Keypad
-from components.toolbar import Toolbar
-from utils.typewriter import typerwriter
 
-import configs.screen as screen
+class Main(Login, Admin, User):
 
-productDB = TinyDB("database/product.json")
-accountDB = TinyDB("database/account.json")
+    def __init__(self):
+        Login.__init__(self)
+        self.loginw.mainloop()
+        self.loginw.state('withdraw') 
+        self.main_window = Toplevel(bg="#FFFFFF")
+        self.main_window.state('zoomed')
 
-sounds = {
-  1: "assets/sounds/clear.wav",
-  2: "assets/sounds/click.wav",
-  3: "assets/sounds/chime.wav",
-  4: "assets/sounds/fail.wav",
-  5: "assets/sounds/coin.wav",
-  6: "assets/sounds/receipt.wav"
-}
 
-#  ------- Controller -------
-class Controller(tk.Tk):
-  def __init__(self, *args, **kwargs):
-    tk.Tk.__init__(self, *args, **kwargs)
+        self.main_window.iconbitmap("images/icon.ico")
+        self.main_window.title("T7 Enterprises")
+        self.main_window.protocol('WM_DELETE_WINDOW', self.__Main_del__)
+        self.getdetails()
 
-    self.container = tk.Frame(self, bg=constants.BACKGROUND_COLOR)
-    self.container.pack()
+    def __Main_del__(self):
+        if messagebox.askyesno("Quit", " Leave Application?"):
+            self.loginw.quit()
+            self.main_window.quit()
+            exit(0)
+        else:
+            pass
 
-    coinBalance = accountDB.get(Query().id == 1)["balance"]
-    ticketBalance = accountDB.get(Query().id == 1)["lotteryTickets"]
+    def getdetails(self):
+        self.cur.execute("CREATE TABLE if not exists products("
+                         "product_id varchar (20),"
+                         "product_name varchar (50) NOT NULL,"
+                         "product_desc varchar (50) NOT NULL,"
+                         "product_cat varchar (50),"
+                         "product_price INTEGER NOT NULL,"
+                         "stocks INTEGER NOT NULL,PRIMARY KEY(product_id));")
 
-    self.products = []
+        self.cur.execute("CREATE TABLE if not exists sales ("
+                         "Trans_id	INTEGER,"
+                         "invoice	INTEGER NOT NULL,"
+                         "Product_id	varchar (20),"
+                         "Quantity INTEGER NOT NULL,"
+                         "Date	varchar (20),"
+                         "Time varchar (20),"
+                         "PRIMARY KEY(Trans_id));")
 
-    self.selected = None
-    self.amount   = 0
-    self.subtotal = tk.DoubleVar(self.container, 0)
-    self.basket   = {}
-    self.stage = screen.CODE
+        self.cur.execute("select * from products ")
 
-    self.coin         = tk.PhotoImage(file="assets/icons/coin.png")
-    self.ticket       = tk.PhotoImage(file="assets/icons/ticket.png")
-    self.chartImage   = tk.PhotoImage(file="assets/icons/chart.png")
-    self.productImage = tk.PhotoImage(file="assets/icons/product.png")
-    self.lotteryImage = tk.PhotoImage(file="assets/icons/lottery.png")
+        self.products = self.cur.fetchall()
+        capuser = self.username.get()
+        capuser = capuser.upper()
+        self.cur.execute("select account_type from users where username= ? ", (capuser,))
+        li = self.cur.fetchall()
+        self.account_type = li[0][0]
+        self.buildmain()
 
-    self.cart          = tk.IntVar(self.container, 0)
-    self.coinBalance   = tk.DoubleVar(self.container, coinBalance)
-    self.ticketBalance = tk.IntVar(self.container, ticketBalance)
-    self.screenMessage = tk.StringVar(self.container, "")
+    def buildmain(self):
+        if self.account_type == 'ADMIN':
+            super(Admin).__init__()
+            self.admin_main_menu()
+        else:
+            super(User).__init__()
+            self.user_mainmenu()
 
-    self.locked = False
-    self.coupon = None
+        self.logout.config(command=self.__Main_del__)
+        self.changeuser.config(command=self.change_user)
+        canvas_top = Canvas(self.main_window, bg=TOP_NAV_COLOR, width=700, height=70)
+        image = Image.open("images/T7ToolbarIcon.PNG")
+        resize_image = image.resize((60, 60))
+        self.logo = ImageTk.PhotoImage(resize_image)
+        self.label = Label(self.main_window, image=self.logo, bg="#ffffff")
+        self.label.image = self.logo
+        self.label.grid(column=0, row=0, pady=(10, 15))
 
-    # Start with a welcome message
-    typerwriter(self, ["Welcome to Team 7\nVending machine"])
+        title = Label(canvas_top, text="Hard Work Beats Talent!", bg=TOP_NAV_COLOR, font=('Arial', 30, 'normal'))
+        title.pack()
 
-    for product in productDB.all():
-      self.products.append(ProductItem(
-        self,
-        product.doc_id,
-        product["name"],
-        product["image"],
-        product["quantity"],
-        product["price"]
-      ))
+        canvas_top.place(x=200, y=12)
 
-    self.productList = ProductList(self.container, self)
-    self.productList.pack(side="left", expand=1, fill="both", padx=(0, 4))
+        self.canvas_user = Canvas(self.main_window, bg=TOP_NAV_COLOR, height=70, width=210)
 
-    self.display = tk.Frame(self.container, bg="white")
-    self.display.pack(side="right", expand=1, fill="both", padx=(4, 0))
+        image = Image.open("images/employee man.png")
+        resize_image = image.resize((50, 50))
+        user = ImageTk.PhotoImage(resize_image)
 
-    self.balance = Balance(self.display, self)
-    self.balance.pack(pady=(8,0), padx=8, fill="x")
+        self.user_label = Label(self.canvas_user, image=user, bg=TOP_NAV_COLOR)
+        self.user_label.image = user
+        self.user_label.place(x=15, y=10)
 
-    self.keypad = Keypad(self.display, self,)
-    self.keypad.pack(fill="x", padx=8, pady=8)
-    self.toolbar = Toolbar(self.display, self)
+        self.User_Name = Label(self.canvas_user, text=f"Hello, {(self.username.get()).capitalize()}",
+                               font=("calibre", 15, "normal"), bg=TOP_NAV_COLOR)
+        self.User_Name.place(x=75, y=25)
 
-  # Update subtotal
-  def updateSubtotal(self, new): self.subtotal.set(round(self.subtotal.get() + new, 2))
+        self.canvas_user.place(x=1100, y=10)
 
-  # Number of the same product 
-  def setAmount(self, new): self.amount = int(new)
+        self.canvas_date = Canvas(self.main_window, bg=BG, height=60, width=210, highlightthickness=2)
+        date = datetime.date.today()
+        day_name = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        day = day_name[datetime.date.today().weekday()]
+        self.date_lbl = Label(self.canvas_date, text=f'{day}, {datetime.date.strftime(date, "%d %b %y")}',
+                              font=('calibri', 15, 'normal'),
+                              fg=FG, bg=BG)
+        self.date_lbl.place(x=10, y=7)
+        wish = ['Morning', 'Afternoon', 'Evening']
+        index = 0
+        if 5 <= int(strftime('%H')) < 12:
+            index = 0
+        if 12 <= int(strftime('%H')) < 17:
+            index = 1
+        if int(strftime('%H')) >= 17:
+            index = 2
+        self.wish_lbl = Label(self.canvas_date, text=f"Good {wish[index]}, Team", bg=BG, fg=FG,
+                              font=('calibri', 13, 'italic'))
+        self.wish_lbl.place(x=10, y=35)
+        self.canvas_date.place(x=1100, y=100)
 
-  # Save current product choice
-  def setSelected(self, new): self.selected = new
+    def change_user(self):
+        if messagebox.askyesno("Alert!", "Do  you want to change user?"):
+            self.base.commit()
+            self.main_window.destroy()
+            self.loginw.destroy()
+            self.__init__()
 
-  # Lock keypad
-  def toggleLock(self, state): self.locked = state
 
-def main():
-  root = Controller()
-  root.title("Vending Machine")
-  # Set default font to Helvetica
-  root.option_add("*Font", "Helvetica")
-  # Deisable resize
-  root.resizable(False,False)
-  root.configure(bg=constants.BACKGROUND_COLOR)
-  root.configure(pady=8, padx=8)
-  root.mainloop()
-
-if __name__ == "__main__":
-  main()
+if __name__ == '__main__':
+    w = Main()
+    w.base.commit()
+    w.main_window.mainloop()
